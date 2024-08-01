@@ -9,8 +9,11 @@ import numpy as np
 import matplotlib.colors as mcolors
 
 
+#数据文件路径
 asc_file_name='./data/AD002_0730_1645.asc'
+#CAN记录仪型号，涉及到不同的数据格式
 can_dev='gc'
+#需要读取的报文名称
 can_sgname_list2=[['VCU_ActualSteeringAngleFB','ADCU_TargetSteeringAngle'],['VCU_VehSpd']]
 
 can_sgname_list=[]
