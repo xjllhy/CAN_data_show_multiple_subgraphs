@@ -9,9 +9,9 @@ import numpy as np
 import matplotlib.colors as mcolors
 
 
-asc_file_name='./data/15-00.asc'
+asc_file_name='./data/AD002_0730_1645.asc'
 can_dev='gc'
-can_sgname_list2=[['VCU_Deceleration','ADCU_Deceleration'],['VCU_VehSpd']]
+can_sgname_list2=[['VCU_ActualSteeringAngleFB','ADCU_TargetSteeringAngle'],['VCU_VehSpd']]
 
 can_sgname_list=[]
 for i in can_sgname_list2:
@@ -70,7 +70,7 @@ for i in can_name_dict:
     #print(message,type(message))
     fid=str(message).split(',')[1][3:]
     if len(fid)<8:
-        fid=('0'*(8-len(fid))+fid).upper()+'x'
+        fid=('0'*(8-len(fid))+fid).upper()+'X'
         id_dict[fid]={'can_name_list':can_name_dict[i],'message':message}
 #print('id_dict:',id_dict)
 
@@ -99,9 +99,9 @@ if can_dev=='han_yun':
 
 screen_id_dict=dict()
 for i in id_dict:
-    #print(ASCfile[2])
+    #print(ASCfile[2].str.upper())
     #print('i'*8,i)
-    filtered_df = ASCfile[ASCfile[2]==i]
+    filtered_df = ASCfile[ASCfile[2].str.upper()==i]
     #print('filtered_df:')
     #print(filtered_df)
 
@@ -148,7 +148,7 @@ def data_processing(input):
 
         t1=time.time()
 
-        signal_values = id_dict[row[2]]['message'].decode(data_bytes)
+        signal_values = id_dict[row[2].upper()]['message'].decode(data_bytes)
         td1=datetime.datetime(1970, 1, 1, hour=23, minute=23, second=0, microsecond=0)
         dt_object = td1+datetime.timedelta(seconds=float(row[0]))
         #print(signal_values)
@@ -209,7 +209,7 @@ def get_data(input):
     #print(last_data['VCU_VehSpd']['time'])
     
     plt.rcParams['font.family'] = 'Heiti TC'
-    fig, ax = plt.subplots(figsize=(16,9),nrows=len(can_sgname_list2),ncols=1,sharex=True)
+    fig, ax = plt.subplots(figsize=(16,8),nrows=len(can_sgname_list2),ncols=1,sharex=True)
     
     colors=list(mcolors.TABLEAU_COLORS.keys())
     #print('len(can_sgname_list2):',len(can_sgname_list2))
@@ -233,7 +233,7 @@ def get_data(input):
                 #ax.plot(last_data[i][0],last_data[i][1],label=i,marker='.')
                 mpl_axes_dict[i] = ax[i2]
                 #print('@'*8)
-                mpl_axes_dict[i].plot(last_data[i][0], last_data[i][1], color=mcolors.TABLEAU_COLORS[colors[i3]], label=i)
+                mpl_axes_dict[i].plot(last_data[i][0], last_data[i][1], color=mcolors.TABLEAU_COLORS[colors[i3]], label=i,marker='.')
                 mpl_axes_dict[i].legend()
                 mpl_axes_dict[i].grid(True)
                 i3+=1
