@@ -61,13 +61,7 @@ def generate_list(asc_file_name,offset_time=[0,0,0,0]):
     print('ASC加载时间:',time.time()-ASC_load_start)
     return ASCfile.values.tolist()
 
-if __name__ == '__main__':
-    can_sgname_list2=[['ADCU_TargetSteeringAngle','VCU_ActualSteeringAngleFB'],['ADCU_SteeringEnable']]
-    id_dict=read_dbc(can_sgname_list2)
-
-    asc_file_name='./data/15-00.asc'
-    data_list=generate_list(asc_file_name,[50,1,2,3])
-
+def data_processing(id_dict,data_list):
     processing_data_start=time.time()
     data_dict=dict()
     i_num=0
@@ -91,7 +85,9 @@ if __name__ == '__main__':
         print('数据处理已完成:{:.2f}%'.format(i_num/len(data_list)*100),end="")
     #print(data_dict)
     print('数据处理时间:',time.time()-processing_data_start)
+    return data_dict
 
+def mpl_show(data_dict):
     plt.rcParams['font.family'] = 'Heiti TC'
     fig, ax = plt.subplots(figsize=(16,8),nrows=len(can_sgname_list2),ncols=1,sharex=True)
     
@@ -124,5 +120,19 @@ if __name__ == '__main__':
                 i3+=1
             i2+=1
             mpl_axes_dict=dict()
-
     plt.show()
+
+if __name__ == '__main__':
+    #填入需要显示的CAN信号，格式为[['信号1','信号2'],['信号3']]，每个子列表为一个子图
+    can_sgname_list2=[['ADCU_TargetSteeringAngle','VCU_ActualSteeringAngleFB'],['ADCU_SteeringEnable']]
+    #id_dict是一个字典，key为CAN ID，value为一个字典，can_name_list是一个列表，里面是该CAN ID下要读取的CAN信号名称，message是一个对象，里面是CAN信号的详细信息
+    id_dict=read_dbc(can_sgname_list2)
+    #print('id_dict:',id_dict,type(id_dict))
+
+    asc_file_name='./data/15-00.asc'
+    #将asc文件的dataframe转换为list，并且时间偏移为[0,0,0,0]，分别为年，月，日，时
+    data_list=generate_list(asc_file_name,[50,1,2,3])
+    #将list数据处理为字典，key为CAN信号，value为时间和数据
+    data_dict=data_processing(id_dict,data_list)
+    #显示数据折线图
+    mpl_show(data_dict)
