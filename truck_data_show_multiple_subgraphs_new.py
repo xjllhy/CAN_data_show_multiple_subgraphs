@@ -2,9 +2,7 @@ import pandas as pd
 import cantools
 import datetime
 import time
-import multiprocessing
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import matplotlib.colors as mcolors
 
 
@@ -48,12 +46,12 @@ def read_dbc(can_sgname_list2):
     #print('id_dict:',id_dict)
     return id_dict
 
-def generate_list(asc_file_name):
-    #CAN记录仪型号，涉及到不同的数据格式
-    can_dev='gc'
+def generate_list(asc_file_name,offset_time=[0,0,0,0]):
     ASC_load_start=time.time()
     try:
         ASCfile = pd.read_csv(asc_file_name,skiprows=2,encoding="gbk",sep=' ',delimiter=None,header=None,skipinitialspace=True,on_bad_lines='skip')
+        ASCfile[0] = pd.to_datetime(ASCfile[0], unit='s')
+        ASCfile[0] = ASCfile[0] + pd.DateOffset(years=offset_time[0]) + pd.DateOffset(months=offset_time[1]) + pd.to_timedelta(offset_time[2], unit='d') + pd.to_timedelta(offset_time[3], unit='h')
     except:
         print('没有找到',asc_file_name,'文件')
 
@@ -68,7 +66,7 @@ if __name__ == '__main__':
     id_dict=read_dbc(can_sgname_list2)
 
     asc_file_name='./data/15-00.asc'
-    data_list=generate_list(asc_file_name)
+    data_list=generate_list(asc_file_name,[50,1,2,3])
 
     processing_data_start=time.time()
     data_dict=dict()
@@ -76,19 +74,18 @@ if __name__ == '__main__':
     for row in data_list:
         #print(row[2])
         if row[2].upper() in id_dict:
-            data_bytes=bytes.fromhex(row[6]+row[7]+row[8]+row[9]+row[10]+row[11]+row[12]+row[13])
+            data_bytes=bytes.fromhex(row[-8]+row[-7]+row[-6]+row[-5]+row[-4]+row[-3]+row[-2]+row[-1])
             signal_values = id_dict[row[2].upper()]['message'].decode(data_bytes)
             #print(signal_values)
             #print(id_dict[row[2].upper()])
-            td1=datetime.datetime(1970, 1, 1, hour=12, minute=0, second=0, microsecond=0)
-            dt_object = td1+datetime.timedelta(seconds=float(row[0]))
+
             for i in id_dict[row[2].upper()]['can_name_list']:
                 #print(i,signal_values[i])
                 if i in data_dict:
-                    data_dict[i][0].append(dt_object)
+                    data_dict[i][0].append(row[0])
                     data_dict[i][1].append(signal_values[i])
                 else:
-                    data_dict[i]=([[dt_object], [signal_values[i]]])
+                    data_dict[i]=([[row[0]], [signal_values[i]]])
         i_num+=1
         print("\r", end="")
         print('数据处理已完成:{:.2f}%'.format(i_num/len(data_list)*100),end="")
